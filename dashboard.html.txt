@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Школьный СКУД - Панель управления</title>
+
+    <!-- Подключаем Bootstrap и иконки -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --primary-color: #1e88e5;
+            --primary-dark: #0d47a1;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --dark-color: #212529;
+        }
+
+        /* Стили для шапки */
+        .skud-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .header-logo {
+            font-size: 1.8rem;
+            /* Убрана анимация float */
+        }
+
+        /* Точка статуса системы */
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            background-color: var(--success-color);
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px var(--success-color);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Стили для карточек управления */
+        .control-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            height: 100%;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .control-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Стили для экстренных кнопок */
+        .emergency-btn {
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .emergency-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Цвета для классов */
+        .badge-10И { background: linear-gradient(135deg, #6f42c1, #9d6cf2); }
+        .badge-10Т { background: linear-gradient(135deg, #fd7e14, #ff9e40); }
+        .badge-10В { background: linear-gradient(135deg, #0dcaf0, #4dd4f7); }
+
+        /* Основной фон и типографика */
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Анимация для новых строк */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .new-row {
+            animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Стили для таблиц */
+        .table-hover tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(30, 136, 229, 0.05);
+            transform: translateX(5px);
+        }
+
+        /* Стили для временных фильтров */
+        .time-filter-group {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Принудительный 24-часовой формат для полей времени */
+        input[type="time"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        /* Убираем AM/PM во всех браузерах */
+        input[type="time"]::-webkit-datetime-edit-ampm-field {
+            display: none;
+        }
+
+        input[type="time"]::-moz-datetime-edit-ampm-field {
+            display: none;
+        }
+
+        input[type="time"]::-ms-clear {
+            display: none;
+        }
+
+        /* Для Firefox */
+        input[type="time"] {
+            text-align: center;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .skud-header h1 {
+                font-size: 1.2rem;
+            }
+
+            .header-logo {
+                font-size: 1.4rem;
+            }
+
+            .emergency-btn {
+                font-size: 0.9rem;
+                padding: 0.6rem 1rem;
+            }
+
+            .table-responsive {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Стили для журнала */
+        .sticky-logs {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 12px;
+            background: white;
+        }
+
+        .sticky-logs thead th {
+            position: sticky;
+            top: 0;
+            background: var(--dark-color);
+            z-index: 10;
+        }
+
+        /* Стили для форм */
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.2);
+        }
+
+        /* Стили для кнопок действия */
+        .action-btn {
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        /* Кастомные скроллбары */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Русский календарь */
+        .flatpickr-calendar {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            color: #333;
+        }
+
+        .flatpickr-weekdays {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        .flatpickr-weekday {
+            color: white !important;
+        }
+
+        .flatpickr-day.selected {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* Стили для уведомлений */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            min-width: 300px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Шапка с замком -->
+    <header class="skud-header py-3 shadow-sm">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="header-logo">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </div>
+                        <div>
+                            <h1 class="h4 mb-0 fw-bold">ШКОЛЬНЫЙ СКУД</h1>
+                            <small class="opacity-75">Система контроля и управления доступом</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="d-flex align-items-center justify-content-end gap-3">
+                        <div class="bg-white bg-opacity-10 rounded-pill px-3 py-2">
+                            <i class="bi bi-clock me-2"></i>
+                            <span id="current-time" class="fw-bold">00:00:00</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-dot"></span>
+                            <small class="fw-medium">Онлайн</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container py-4">
+        <!-- Экстренные кнопки -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <button id="btn-emergency-open" class="btn btn-success emergency-btn w-100">
+                    <i class="bi bi-unlock-fill me-2"></i>ЭКСТРЕННО ОТКРЫТЬ
+                </button>
+            </div>
+            <div class="col-md-6">
+                <button id="btn-emergency-close" class="btn btn-dark emergency-btn w-100">
+                    <i class="bi bi-lock-fill me-2"></i>ЭКСТРЕННО ЗАКРЫТЬ
+                </button>
+            </div>
+        </div>
+
+        <!-- Временное ограничение доступа -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card control-card border-warning">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-1">
+                                    <i class="bi bi-calendar-range me-2"></i>Временное ограничение доступа
+                                </h5>
+                                <p class="text-muted small mb-0">Установите период, когда вход в полигон будет закрыт</p>
+                            </div>
+                            <button class="btn btn-outline-danger btn-sm" onclick="resetTimeBan()">
+                                <i class="bi bi-x-circle me-1"></i>Сбросить
+                            </button>
+                        </div>
+
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label class="form-label small fw-bold">Начало ограничения</label>
+                                    <input type="time" id="ban-start-time" class="form-control" value="22:00" step="1">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label class="form-label small fw-bold">Окончание ограничения</label>
+                                    <input type="time" id="ban-end-time" class="form-control" value="06:00" step="1">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-warning w-100 mt-4" onclick="saveTimeConfig()">
+                                    <i class="bi bi-check-circle me-1"></i>Применить
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                В этот период доступ будет закрыт для всех учеников
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Основной контент -->
+        <div class="row g-4">
+            <!-- Таблица учеников -->
+            <div class="col-lg-8">
+                <div class="card control-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="fw-bold">
+                                    <i class="bi bi-people-fill me-2"></i>База учеников
+                                    <span id="student-count" class="badge bg-primary ms-2">0</span>
+                                </h5>
+                            </div>
+                            <button class="btn btn-outline-primary btn-sm" onclick="loadData()">
+                                <i class="bi bi-arrow-clockwise"></i> Обновить
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ФИО</th>
+                                        <th>Класс</th>
+                                        <th>ID Карты</th>
+                                        <th>Статус</th>
+                                        <!-- Столбец "Действия" удален -->
+                                    </tr>
+                                </thead>
+                                <tbody id="students-list">
+                                    <!-- Данные загружаются через JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Форма добавления ученика -->
+            <div class="col-lg-4">
+                <div class="card control-card border-success">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">
+                            <i class="bi bi-person-plus-fill me-2"></i>Регистрация новой карты
+                        </h5>
+
+                        <form id="add-student-form">
+                            <div class="row g-2 mb-2">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Фамилия <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="last-name" required placeholder="Иванов">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Имя <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="first-name" required placeholder="Иван">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Отчество</label>
+                                    <input type="text" class="form-control" id="middle-name" placeholder="Иванович">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Класс <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="klass" required>
+                                        <option value="">Выберите класс</option>
+                                        <option value="10И">10И</option>
+                                        <option value="10Т">10Т</option>
+                                        <option value="10В">10В</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">ID Карты <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="text" id="card-uid" class="form-control" placeholder="Нажмите сканировать" required>
+                                        <button class="btn btn-dark" type="button" onclick="scanCard()">
+                                            <i class="bi bi-qr-code-scan"></i> Сканировать
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">Сначала поднесите карту к считывателю</small>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100 mt-3 fw-bold">
+                                <i class="bi bi-save me-2"></i>ЗАРЕГИСТРИРОВАТЬ
+                            </button>
+                            <small class="text-muted mt-2 d-block">Поля, отмеченные <span class="text-danger">*</span>, обязательны для заполнения</small>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Журнал проходов -->
+        <div class="card control-card mt-4">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-journal-text me-2"></i>Журнал проходов
+                </h5>
+
+                <!-- Фильтры журнала -->
+                <div class="row g-3 mb-4 time-filter-group">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Дата</label>
+                        <input type="date" id="filter-date" class="form-control" oninput="filterLogsTable()">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Время с</label>
+                        <input type="time" id="filter-time-from" class="form-control" oninput="filterLogsTable()" step="1">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Время по</label>
+                        <input type="time" id="filter-time-to" class="form-control" oninput="filterLogsTable()" step="1">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Класс</label>
+                        <select id="filter-class" class="form-select" onchange="filterLogsTable()">
+                            <option value="">Все классы</option>
+                            <option value="10И">10И</option>
+                            <option value="10Т">10Т</option>
+                            <option value="10В">10В</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Таблица журнала -->
+                <div class="table-responsive sticky-logs">
+                    <table class="table table-hover table-sm">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ФИО</th>
+                                <th>Класс</th>
+                                <th>Дата и время</th>
+                                <th>Тип события</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-list">
+                            <!-- Данные загружаются через JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-3 text-end">
+                    <small class="text-muted">
+                        <span id="log-count">0</span> записей
+                    </small>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    < script >
+        let studentsData = [];
+
+    // Загрузка данных
+    async function loadData() {
+        try {
+            const res = await fetch('/get_students');
+            const data = await res.json();
+            studentsData = data.students;
+            renderStudentsTable();
+            renderLogsTable();
+        } catch (err) {
+            console.error("Ошибка загрузки:", err);
+        }
+    }
+
+    // Отрисовка таблицы учеников
+    function renderStudentsTable() {
+        const list = document.getElementById('students-list');
+        list.innerHTML = studentsData.map(s => `
+                <tr>
+                    <td class="fw-bold">${s.last_name} ${s.first_name}</td>
+                    <td><span class="badge badge-${s.class} p-2">${s.class}</span></td>
+                    <td><code>${s.id}</code></td>
+                    <td><span class="badge ${s.active ? 'bg-success' : 'bg-danger'}">${s.active ? 'Активен' : 'Заблокирован'}</span></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-light" onclick="changeStatus('${s.id}', ${!s.active})">
+                            ${s.active ? 'Блок' : 'Разблок'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        document.getElementById('student-count').textContent = studentsData.length;
+    }
+
+    // Смена статуса
+    async function changeStatus(cardId, newStatus) {
+        await fetch('/update_status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: cardId,
+                active: newStatus
+            })
+        });
+        loadData();
+    }
+
+    // Сохранение настроек времени (Запрет)
+    async function saveConfig() {
+        const start = document.getElementById('ban-start').value;
+        const end = document.getElementById('ban-end').value;
+        await fetch('/update_config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                start_hour: parseInt(start),
+                end_hour: parseInt(end)
+            })
+        });
+        alert("Настройки времени сохранены!");
+    }
+
+    // Добавление ученика
+    document.getElementById('add-student-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const student = {
+            id: document.getElementById('card-uid').value,
+            last_name: document.getElementById('last-name').value,
+            first_name: document.getElementById('first-name').value,
+            middle_name: document.getElementById('middle-name').value,
+            class: document.getElementById('klass').value,
+            active: true,
+            history: []
+        };
+        const res = await fetch('/add_student', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(student)
+        });
+        if (res.ok) {
+            this.reset();
+            loadData();
+        }
+    };
+
+    // Сканер
+    async function scanCard() {
+        const res = await fetch('/get_last_id');
+        const id = await res.text();
+        if (id) document.getElementById('card-uid').value = id;
+        else alert("Карта не обнаружена");
+    }
+
+    // Журнал
+    function renderLogsTable() {
+        let allLogs = [];
+        studentsData.forEach(s => {
+            if (s.history) s.history.forEach(h => {
+                allLogs.push({
+                    name: `${s.last_name} ${s.first_name}`,
+                    class: s.class,
+                    time: h
+                });
+            });
+        });
+        allLogs.sort((a, b) => b.time.localeCompare(a.time));
+        document.getElementById('logs-list').innerHTML = allLogs.map(l => `
+                <tr>
+                    <td>${l.name}</td>
+                    <td>${l.class}</td>
+                    <td>${l.time}</td>
+                    <td>Вход выполнен</td>
+                </tr>
+            `).join('');
+    }
+
+    // Фильтрация
+    function filterTable() {
+        const dateIn = document.getElementById('filter-date').value;
+        const hourIn = document.getElementById('filter-hour').value;
+        const classIn = document.getElementById('filter-class').value;
+        let fmtD = dateIn ? `${dateIn.split('-')[2]}.${dateIn.split('-')[1]}` : "";
+
+        document.querySelectorAll('#logs-list tr').forEach(row => {
+            const dt = row.cells[2].innerText; // "25.05.24 14:00"
+            const cl = row.cells[1].innerText;
+            const mD = !fmtD || dt.includes(fmtD);
+            const mH = !hourIn || dt.split(' ')[1].startsWith(hourIn);
+            const mC = !classIn || cl === classIn;
+            row.style.display = (mD && mH && mC) ? "" : "none";
+        });
+    }
+
+    setInterval(() => {
+        document.getElementById('current-time').textContent = new Date().toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }, 1000);
+
+    window.onload = loadData;
+
+    const ESP_IP = ""; // Оставь пустым, если скрипт на самом ESP, или напиши IP (напр. "http://192.168.1.10")
+
+    // 1. Обновление часов в шапке
+    setInterval(() => {
+        const now = new Date();
+        document.getElementById('current-time').innerText = now.toLocaleTimeString('ru-RU');
+    }, 1000);
+
+    // 2. Экстренные кнопки
+    document.getElementById('btn-emergency-open').addEventListener('click', () => sendCommand('EMERGENCY_OPEN'));
+    document.getElementById('btn-emergency-close').addEventListener('click', () => sendCommand('EMERGENCY_CLOSE'));
+
+    async function sendCommand(action) {
+        if (!confirm(`Вы уверены, что хотите выполнить действие: ${action}?`)) return;
+        try {
+            const response = await fetch(`${ESP_IP}/command?action=${action}`);
+            if (response.ok) alert("Команда успешно отправлена");
+        } catch (e) {
+            alert("Ошибка связи с контроллером");
+        }
+    }
+
+    // 3. Сохранение настроек временного ограничения
+    function saveTimeConfig() {
+        const start = document.getElementById('ban-start-time').value;
+        const end = document.getElementById('ban-end-time').value;
+
+        console.log(`Настройка ограничения: с ${start} до ${end}`);
+
+        // Отправка на ESP
+        fetch(`${ESP_IP}/set_ban?start=${start}&end=${end}`)
+            .then(res => alert("Настройки времени сохранены!"))
+            .catch(err => alert("Ошибка при сохранении"));
+    }
+
+    function resetTimeBan() {
+        document.getElementById('ban-start-time').value = "00:00";
+        document.getElementById('ban-end-time').value = "00:00";
+        saveTimeConfig();
+    }
+
+    // 4. Умная фильтрация журнала (по Дате, Времени и Классу)
+    function filterLogsTable() {
+        const dateVal = document.getElementById('filter-date').value;
+        const timeFrom = document.getElementById('filter-time-from').value;
+        const timeTo = document.getElementById('filter-time-to').value;
+        const classVal = document.getElementById('filter-class').value;
+
+        const rows = document.querySelectorAll('#logs-list tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const rowDateTimeText = row.cells[2].innerText; // Формат: "2023-10-25 14:30:05"
+            const [rowDate, rowTime] = rowDateTimeText.split(' ');
+            const rowClass = row.cells[1].innerText;
+
+            // Логика фильтрации
+            const matchDate = !dateVal || rowDate === dateVal;
+            const matchClass = !classVal || rowClass === classVal;
+
+            // Сравнение времени (просто как строки "14:00" >= "13:00")
+            const matchTimeFrom = !timeFrom || rowTime >= timeFrom;
+            const matchTimeTo = !timeTo || rowTime <= timeTo;
+
+            if (matchDate && matchClass && matchTimeFrom && matchTimeTo) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('log-count').innerText = visibleCount;
+    }
+
+    // Пример функции добавления строки в журнал (для теста)
+    function addLogEntry(fio, klass, datetime, event) {
+        const tbody = document.getElementById('logs-list');
+        const row = tbody.insertRow(0);
+        row.className = 'new-row';
+        row.innerHTML = `
+        <td>${fio}</td>
+        <td><span class="badge badge-${klass}">${klass}</span></td>
+        <td>${datetime}</td>
+        <td><span class="text-success">${event}</span></td>
+    `;
+        filterLogsTable();
+    }
+document.querySelectorAll('input[type="time"]').forEach(input => {
+        input.setAttribute('lang', 'ru-RU');
+    });
+</script>
+</body>
+</html>

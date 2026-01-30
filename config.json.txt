@@ -1,0 +1,4 @@
+{
+	"banStartMin": 1320,
+	"banEndMin": 360
+}
